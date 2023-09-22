@@ -7,7 +7,7 @@ from datetime import datetime
 import pytest
 
 from ci.ray_ci.container import _DOCKER_ECR_REPO
-from ci.ray_ci.docker_container import DockerContainer
+from ci.ray_ci.ray_docker_container import RayDockerContainer
 from ci.ray_ci.test_base import RayCITestBase
 from ci.ray_ci.utils import RAY_VERSION
 
@@ -20,12 +20,12 @@ class TestDockerContainer(RayCITestBase):
             self.cmds.append(input[0])
 
         with mock.patch(
-            "ci.ray_ci.docker_container.docker_pull", return_value=None
+            "ci.ray_ci.ray_docker_container.docker_pull", return_value=None
         ), mock.patch(
             "ci.ray_ci.docker_container.Container.run_script",
             side_effect=_mock_run_script,
         ):
-            container = DockerContainer("py38", "cu118", "ray")
+            container = RayDockerContainer("py38", "cu118", "ray")
             container.run()
             cmd = self.cmds[-1]
             assert cmd == (
@@ -36,7 +36,7 @@ class TestDockerContainer(RayCITestBase):
                 "rayproject/ray:123456-py38-cu118"
             )
 
-            container = DockerContainer("py37", "cpu", "ray-ml")
+            container = RayDockerContainer("py37", "cpu", "ray-ml")
             container.run()
             cmd = self.cmds[-1]
             assert cmd == (
@@ -48,7 +48,7 @@ class TestDockerContainer(RayCITestBase):
             )
 
     def test_get_image_name(self) -> None:
-        container = DockerContainer("py38", "cpu", "ray")
+        container = RayDockerContainer("py38", "cpu", "ray")
         assert container._get_image_names() == [
             "rayproject/ray:123456-py38-cpu",
             "rayproject/ray:123456-py38",
@@ -56,7 +56,7 @@ class TestDockerContainer(RayCITestBase):
             "rayproject/ray:nightly-py38",
         ]
 
-        container = DockerContainer("py37", "cu118", "ray-ml")
+        container = RayDockerContainer("py37", "cu118", "ray-ml")
         assert container._get_image_names() == [
             "rayproject/ray-ml:123456-py37-cu118",
             "rayproject/ray-ml:123456-py37-gpu",
@@ -70,7 +70,7 @@ class TestDockerContainer(RayCITestBase):
             os.environ, {"BUILDKITE_BRANCH": "releases/1.0.0"}
         ), mock.patch("ci.ray_ci.docker_container.datetime") as mock_date:
             mock_date.now.return_value = datetime(2021, 1, 1)
-            container = DockerContainer("py38", "cpu", "ray")
+            container = RayDockerContainer("py38", "cpu", "ray")
             assert container._get_image_names() == [
                 "rayproject/ray:1.0.0.123456-py38-cpu",
                 "rayproject/ray:1.0.0.123456-py38",
